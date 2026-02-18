@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-50 text-slate-900 font-sans;
+}
+
+/* Custom scrollbar for the recruiter table */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full;
+}
+@layer components {
+  .btn-primary {
+    @apply px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold 
+           hover:bg-blue-700 transition-all duration-200 shadow-md active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply px-5 py-2.5 bg-white border border-slate-200 text-slate-700 
+           rounded-lg font-semibold hover:bg-slate-50 transition-all;
+  }
+
+  .card {
+    @apply bg-white border border-slate-200 rounded-xl p-6 shadow-sm;
+  }
+
+  .input-field {
+    @apply w-full p-3 border border-slate-200 rounded-lg focus:ring-2 
+           focus:ring-blue-500 focus:border-transparent outline-none transition-all;
+  }
+  
+  .status-pill {
+    @apply px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+  }
+}
