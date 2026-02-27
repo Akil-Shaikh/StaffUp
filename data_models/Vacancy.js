@@ -11,11 +11,11 @@ const VacancyModel = new mongoose.Schema({
     total: { type: Number, default: 3 },
     filled: { type: Number, default: 0 }
   },
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Account_jwt' },
   isClosed: {
     type: Boolean,
     default: false
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Vacancy', VacancyModel);
+module.exports = mongoose.model('Vacancy_jwt', VacancyModel);

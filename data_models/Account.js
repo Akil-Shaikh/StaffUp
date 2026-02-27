@@ -8,8 +8,8 @@ const AccountModel = new mongoose.Schema({
   meta: {
     experience: String, company: String,
   },
-  resume: { type: String }
+  cvPath: String
 })
 
 
-module.exports = mongoose.model('Account', AccountModel);
+module.exports = mongoose.model('Account_jwt', AccountModel);
