@@ -1,34 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import API from '../api/axios';
+import API from '../../api/axios';
 
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  
   const [job, setJob] = useState(null);
   const [exp, setExp] = useState('');
   const [notes, setNotes] = useState('');
-  const [hasapplied,setHasApplied]=useState(false);
+  const [resumeFile, setResumeFile] = useState(null); // Added state for the file
+  const [hasApplied, setHasApplied] = useState(false);
 
   useEffect(() => {
-    // Updated to the new hiring endpoint
+    // Fetch job details
     API.get(`/candidate/view/${id}`)
       .then(res => setJob(res.data))
       .catch(err => console.error("Error fetching job details", err));
+      
+    // Check if already applied
     API.get(`/candidate/check-applied/${id}`)
-    .then(res => setHasApplied(res.data.applied));
+      .then(res => setHasApplied(res.data.applied))
+      .catch(err => console.error("Error checking application status", err));
   }, [id]);
 
   const handleApply = async (e) => {
     e.preventDefault();
+    
+    // Safety check
+    if (!resumeFile) return alert("Please upload a resume for this application.");
+
+    // Switch to FormData to handle the file upload
+    const formData = new FormData();
+    formData.append('vacancyId', id);
+    formData.append('experience', exp);       // Matches backend expectation
+    formData.append('expectations', notes);   // Matches backend expectation
+    formData.append('resume', resumeFile);    // Matches uploadResume.single('resume')
+
     try {
-      // Updated to match 'tracker' endpoint and 'Submission' model
-      await API.post('/candidate/apply', { 
-        vacancyId: id, 
-        details: { 
-          exp: exp, 
-          notes: notes 
-        } 
+      await API.post('/candidate/apply', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert("Application Submitted successfully!");
       navigate('/candidate/dashboard');
@@ -44,9 +55,12 @@ const JobDetails = () => {
   );
 
   const isFull = job.slots.filled >= job.slots.total;
+  const isDisabled = isFull || hasApplied;
 
   return (
     <div className="max-w-6xl mx-auto py-12 grid grid-cols-1 md:grid-cols-3 gap-12 px-4">
+      
+      {/* Left Column: Job Details */}
       <div className="md:col-span-2">
         <h1 className="text-5xl font-black text-slate-900 mb-4 tracking-tighter italic">
           {job.title}
@@ -70,30 +84,45 @@ const JobDetails = () => {
         </div>
       </div>
 
-      {/* Application Sidebar */}
+      {/* Right Column: Application Sidebar */}
       <div className="h-fit sticky top-24">
         <div className="bg-white p-8 rounded-2xl shadow-2xl border border-slate-100">
           <h3 className="text-2xl font-black mb-6 italic text-slate-900">QUICK <span className="text-blue-600">APPLY</span></h3>
+          
           <form onSubmit={handleApply} className="space-y-4">
             <div>
               <label className="block text-xs font-black text-slate-400 uppercase mb-1">Total Experience</label>
               <input 
-              disabled={isFull || hasapplied }
+                disabled={isDisabled}
                 type="text" 
                 placeholder="e.g. 3 years" 
-                className={`w-full p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition ${isFull || hasapplied ? 'bg-slate-300 cursor-not-allowed' : '' }`}
+                className={`w-full p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition ${isDisabled ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : '' }`}
                 required 
                 onChange={e => setExp(e.target.value)} 
               />
             </div>
+
             <div>
               <label className="block text-xs font-black text-slate-400 uppercase mb-1">Additional Notes</label>
               <textarea 
-              disabled={isFull || hasapplied }
+                disabled={isDisabled}
                 placeholder="Why should we hire you?" 
-                className={`w-full p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition ${isFull || hasapplied ? 'bg-slate-300 cursor-not-allowed' : '' }`}
+                className={`w-full p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition ${isDisabled ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : '' }`}
                 rows="4" 
                 onChange={e => setNotes(e.target.value)} 
+              />
+            </div>
+
+            {/* Added Resume Upload Field */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+              <label className="block text-xs font-black text-slate-500 uppercase mb-2">Upload Specific Resume</label>
+              <input 
+                disabled={isDisabled}
+                type="file" 
+                accept=".pdf,.doc,.docx"
+                className={`w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                required={!hasApplied} // Only required if they haven't applied yet
+                onChange={e => setResumeFile(e.target.files[0])} 
               />
             </div>
             
@@ -101,16 +130,18 @@ const JobDetails = () => {
                <p className="text-[10px] font-bold text-slate-400 uppercase">Availability</p>
                <p className="text-sm font-bold text-slate-700">{job.slots.total - job.slots.filled} out of {job.slots.total} slots remaining</p>
             </div>
+
             <button 
-              disabled={isFull || hasapplied }
+              disabled={isDisabled}
               className={`w-full py-4 rounded-xl font-black text-white transition-all transform active:scale-95 shadow-lg
-                ${isFull || hasapplied ? 'bg-slate-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                ${isDisabled ? 'bg-slate-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
             >
-              {isFull ? 'CAPACITY REACHED' : hasapplied ? 'Applied':'SUBMIT APPLICATION'}
+              {isFull ? 'CAPACITY REACHED' : hasApplied ? 'ALREADY APPLIED' : 'SUBMIT APPLICATION'}
             </button>
           </form>
         </div>
       </div>
+      
     </div>
   );
 };

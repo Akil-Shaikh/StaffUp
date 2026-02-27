@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import API from '../api/axios';
+import API from '../../api/axios';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import JobDetails from './JobDetails';
+import JobDetails from '../candidate/JobDetails';
 
 dayjs.extend(relativeTime);
 
@@ -116,9 +116,9 @@ const RecruiterJobDetails = () => {
                     {
                         !job.isClosed && <div>
                             <Link to={`/recruiter/edit-job/${job._id}`}>
-                                <button className='text-3xl  text-white bg-blue-400 rounded-full px-5 py-2'>Edit</button>
+                                <button className='text-2xl  text-white bg-blue-400 rounded-full px-5 py-2'>Edit</button>
                             </Link>
-                            <button className='text-3xl text-white bg-orange-800 rounded-full ml-2 px-3 py-2' onClick={handleclose}>Close</button>
+                            <button className='text-2xl text-white bg-orange-800 rounded-full ml-2 px-3 py-2' onClick={handleclose}>Close</button>
                         </div>
                     }
 

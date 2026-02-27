@@ -4,12 +4,11 @@ import API from '../api/axios';
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [resumeFile, setResumeFile] = useState(null);
+  const [cvFile, setcvFile] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
-    companyName: '',
-    experience: ''
+    company: '',
   });
 
   useEffect(() => {
@@ -20,12 +19,11 @@ const Profile = () => {
 
         setFormData({
           name: res.data.name,
-          companyName: res.data.meta?.company || '',
-          experience: res.data.meta?.experience || ''
+          company: res.data.meta?.company || '',
         });
 
       } catch (err) {
-        console.error("Error fetching profile");
+        console.error("Error fetching profile", err);
       }
     };
 
@@ -41,11 +39,11 @@ const Profile = () => {
       payload.append("name", formData.name);
 
       if (user.role === "recruiter") {
-        payload.append("company", formData.companyName);
+        payload.append("company", formData.company);
       } else {
-        payload.append("experience", formData.experience);
-        if (resumeFile) {
-          payload.append("resume", resumeFile);
+        if (cvFile) {
+          // CRITICAL: Must match uploadCV.single("cv") in backend
+          payload.append("cv", cvFile); 
         }
       }
 
@@ -54,10 +52,16 @@ const Profile = () => {
       });
 
       alert("Profile updated successfully!");
+      
+      // Update local storage so Navbar stays in sync
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      storedUser.name = formData.name;
+      localStorage.setItem('user', JSON.stringify(storedUser));
+      
       window.location.reload();
 
     } catch (err) {
-      alert("Update failed");
+      alert(err.response?.data?.msg || "Update failed");
     }
   };
 
@@ -66,13 +70,13 @@ const Profile = () => {
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-6">
-      <div className="card shadow-2xl border-t-8 border-blue-600">
+      <div className="card shadow-2xl border-t-8 border-blue-600 bg-white p-8 rounded-xl">
 
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-black text-slate-900">My Profile</h1>
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className="btn-secondary text-sm"
+            className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded hover:bg-slate-200 transition text-sm"
           >
             {isEditing ? 'Cancel' : 'Edit Profile'}
           </button>
@@ -109,31 +113,23 @@ const Profile = () => {
               </div>
             ) : (
               <>
+                
+                {/* Resume Display - Fixed nesting */}
                 <div className="space-y-1">
                   <p className="text-xs font-black text-slate-400 uppercase">
-                    Years of Experience
+                    Permanent CV
                   </p>
-                  <p className="text-lg font-bold text-slate-800">
-                    {user.meta?.experience || 'Not Set'}
-                  </p>
-                </div>
-
-                {/* Resume Display */}
-                <div className="space-y-1">
-                  <p className="text-xs font-black text-slate-400 uppercase">
-                    Resume
-                  </p>
-                  {user.resume ? (
+                  {user.cvPath ? (
                     <a
-                      href={`http://localhost:5000${user.resume}`}
+                      href={`http://localhost:5000${user.cvPath}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-blue-600 font-bold underline"
                     >
-                      View Resume
+                      View Current Document
                     </a>
                   ) : (
-                    <p className="text-red-500 font-bold">No Resume Uploaded</p>
+                    <p className="text-red-500 font-bold">No CV Uploaded</p>
                   )}
                 </div>
               </>
@@ -150,10 +146,9 @@ const Profile = () => {
               <input
                 type="text"
                 value={formData.name}
-                className="input-field"
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                className="w-full p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
               />
             </div>
 
@@ -162,45 +157,30 @@ const Profile = () => {
                 <label className="text-sm font-bold text-slate-700">Company Name</label>
                 <input
                   type="text"
-                  value={formData.companyName}
-                  className="input-field"
-                  onChange={(e) =>
-                    setFormData({ ...formData, companyName: e.target.value })
-                  }
+                  value={formData.company}
+                  className="w-full p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  required
                 />
               </div>
             ) : (
               <>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">
-                    Experience
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.experience}
-                    className="input-field"
-                    onChange={(e) =>
-                      setFormData({ ...formData, experience: e.target.value })
-                    }
-                  />
-                </div>
-
-                {/* Resume Update */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">
-                    Update Resume
+                <div className="space-y-2 p-4 bg-slate-50 border rounded-lg">
+                  <label className="text-sm font-bold text-slate-700 block mb-2">
+                    Update CV
                   </label>
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx"
-                    className="input-field"
-                    onChange={(e) => setResumeFile(e.target.files[0])}
+                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    onChange={(e) => setcvFile(e.target.files[0])}
                   />
+                  <p className="text-xs text-slate-400 mt-2">* Leaves current CV unchanged if left empty.</p>
                 </div>
               </>
             )}
 
-            <button className="btn-primary w-full py-4 font-black">
+            <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-xl font-black hover:bg-blue-700 transition shadow-lg active:scale-95">
               Save Changes
             </button>
 

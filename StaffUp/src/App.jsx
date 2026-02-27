@@ -2,19 +2,19 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import RecruiterDashboard from './pages/RecruiterDashboard';
-import CandidatePortal from './pages/CandidatePortal';
-import JobDetails from './pages/JobDetails';
-import PostJob from './pages/PostJob';
+import RecruiterDashboard from './pages/recruiter/RecruiterDashboard';
+import CandidatePortal from './pages/candidate/CandidatePortal';
+import JobDetails from './pages/candidate/JobDetails';
+import PostJob from './pages/recruiter/PostJob';
 import Register from './pages/Register';
-import CandidateDashboard from './pages/CandidateDashboard';
+import CandidateDashboard from './pages/candidate/CandidateDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/profile';
 import Logout from './pages/Logout';
-import ApplicationDetails from './pages/ApplicationDetails'
-import RecruiterJobDetails from './pages/RecruiterJobDetails';
-import AppliedJob from './pages/AppliedJobDetails';
-import RecruiterEditJob from './pages/RecruiterEditJob';
+import ApplicationDetails from './pages/recruiter/ApplicationDetails'
+import RecruiterJobDetails from './pages/recruiter/RecruiterJobDetails';
+import AppliedJob from './pages/candidate/AppliedJobDetails';
+import RecruiterEditJob from './pages/recruiter/RecruiterEditJob';
 
 function App() {
   return (

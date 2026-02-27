@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import API from '../api/axios';
+import API from '../../api/axios';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -15,7 +15,6 @@ const RecruiterDashboard = () => {
     const [recentApps, setRecentApps] = useState([]);
     const [hiredApps, setHiredApps] = useState([]);
 
-
     // 🔥 Filters
     const [search, setSearch] = useState("");
     const [minExp, setMinExp] = useState("");
@@ -25,6 +24,7 @@ const RecruiterDashboard = () => {
     const [loading, setLoading] = useState(true);
     const liveJobs = jobs.filter(job => !job.isClosed);
     const closedJobs = jobs.filter(job => job.isClosed);
+
     useEffect(() => {
         const fetchRecruiterData = async () => {
             try {
@@ -32,15 +32,12 @@ const RecruiterDashboard = () => {
                 const res = await API.get("/recruit/applications");
 
                 setJobs(jobRes.data);
-
                 setRecentApps(res.data.recent);
                 setHiredApps(res.data.hired);
-
             } catch (err) {
                 console.error("Dashboard Sync Error", err);
             } finally {
                 setLoading(false);
-
             }
         };
 
@@ -71,8 +68,8 @@ const RecruiterDashboard = () => {
                 ? Number(app.details?.exp || 0) >= Number(minExp)
                 : true;
 
-            const statusMatch =
-                statusFilter === "All"
+            // FIXED: Automatically ignore status filter if we are on the 'hired' tab
+            const statusMatch = activeTab === "hired" || statusFilter === "All"
                     ? true
                     : app.status === statusFilter;
 
@@ -129,7 +126,7 @@ const RecruiterDashboard = () => {
                         : "text-slate-400"
                         }`}
                 >
-                    closed Jobs ({closedJobs.length})
+                    Closed Jobs ({closedJobs.length})
                 </button>
             </div>
 
@@ -152,14 +149,14 @@ const RecruiterDashboard = () => {
                                     </p>
                                 </div>
                             </Link>
-                        )))
-                    }
+                        ))
+                    )}
                 </div>
             )}
 
-            {/* 🔹 closed JOBS */}
+            {/* 🔹 CLOSED JOBS */}
             {active2Tab === "closed" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                     {closedJobs.length === 0 ? (
                         <p className="text-gray-500">No closed jobs.</p>
                     ) : (
@@ -170,13 +167,12 @@ const RecruiterDashboard = () => {
                                         {job.title}
                                     </h3>
                                     <p className="text-2xl font-black text-red-600 mt-1">
-                                        closed
+                                        Closed
                                     </p>
-                                    
                                 </div>
                             </Link>
-                        )))
-                    }
+                        ))
+                    )}
                 </div>
             )}
 
@@ -204,12 +200,13 @@ const RecruiterDashboard = () => {
             </div>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {/* FIXED: Dynamic grid columns so it scales beautifully when the dropdown is hidden */}
+            <div className={`grid grid-cols-1 ${activeTab === "recent" ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4 mb-6`}>
 
                 <input
                     type="text"
                     placeholder="Search by name..."
-                    className="input-field"
+                    className="input-field p-3 border rounded-lg"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
@@ -217,24 +214,27 @@ const RecruiterDashboard = () => {
                 <input
                     type="number"
                     placeholder="Min Experience"
-                    className="input-field"
+                    className="input-field p-3 border rounded-lg"
                     value={minExp}
                     onChange={(e) => setMinExp(e.target.value)}
                 />
 
-                <select
-                    className="input-field"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                    <option value="All">All Status</option>
-                    <option value="Pending">Applied</option>
-                    <option value="Shortlisted">Shortlisted</option>
-                    <option value="Dropped">Dropped</option>
-                </select>
+                {/* FIXED: Conditionally render Status Filter ONLY on Recent tab */}
+                {activeTab === "recent" && (
+                    <select
+                        className="input-field p-3 border rounded-lg"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                        <option value="All">All Status</option>
+                        <option value="Pending">Applied</option>
+                        <option value="Shortlisted">Shortlisted</option>
+                        <option value="Dropped">Dropped</option>
+                    </select>
+                )}
 
                 <select
-                    className="input-field"
+                    className="input-field p-3 border rounded-lg"
                     value={sortByDate}
                     onChange={(e) => setSortByDate(e.target.value)}
                 >
